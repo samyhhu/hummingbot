@@ -34,7 +34,7 @@ from hummingbot.connector.exchange_base import ExchangeBase
 from hummingbot.core.rate_oracle.rate_oracle import RATE_ORACLE_SOURCES, RateOracle
 from hummingbot.core.rate_oracle.sources.rate_source_base import RateSourceBase
 from hummingbot.core.utils.kill_switch import ActiveKillSwitch, KillSwitch, PassThroughKillSwitch
-# from hummingbot.notifier.telegram_notifier import TelegramNotifier
+from hummingbot.notifier.telegram_notifier import TelegramNotifier
 from hummingbot.pmm_script.pmm_script_iterator import PMMScriptIterator
 from hummingbot.strategy.strategy_base import StrategyBase
 
@@ -388,44 +388,44 @@ class AutofillImportEnum(str, ClientConfigEnum):
     disabled = "disabled"
 
 
-#class TelegramMode(BaseClientModel, ABC):
-#    @abstractmethod
-#    def get_notifiers(self, hb: "HummingbotApplication") -> List[TelegramNotifier]:
-#        ...
-#
-#
-#class TelegramEnabledMode(TelegramMode):
-#    telegram_token: str = Field(
-#        default=...,
-#        client_data=ClientFieldData(prompt=lambda cm: "What is your telegram token?"),
-#    )
-#    telegram_chat_id: str = Field(
-#        default=...,
-#        client_data=ClientFieldData(prompt=lambda cm: "What is your telegram chat id?"),
-#    )
-#
-#    class Config:
-#        title = "telegram_enabled"
-#
-#    def get_notifiers(self, hb: "HummingbotApplication") -> List[TelegramNotifier]:
-#        notifiers = [
-#            TelegramNotifier(token=self.telegram_token, chat_id=self.telegram_chat_id, hb=hb)
-#        ]
-#        return notifiers
-#
-#
-#class TelegramDisabledMode(TelegramMode):
-#    class Config:
-#        title = "telegram_disabled"
-#
-#    def get_notifiers(self, hb: "HummingbotApplication") -> List[TelegramNotifier]:
-#        return []
-# 
-# 
-# TELEGRAM_MODES = {
-#     TelegramEnabledMode.Config.title: TelegramEnabledMode,
-#     TelegramDisabledMode.Config.title: TelegramDisabledMode,
-# }
+class TelegramMode(BaseClientModel, ABC):
+    @abstractmethod
+    def get_notifiers(self, hb: "HummingbotApplication") -> List[TelegramNotifier]:
+        ...
+
+
+class TelegramEnabledMode(TelegramMode):
+    telegram_token: str = Field(
+        default=...,
+        client_data=ClientFieldData(prompt=lambda cm: "What is your telegram token?"),
+    )
+    telegram_chat_id: str = Field(
+        default=...,
+        client_data=ClientFieldData(prompt=lambda cm: "What is your telegram chat id?"),
+    )
+
+    class Config:
+        title = "telegram_enabled"
+
+    def get_notifiers(self, hb: "HummingbotApplication") -> List[TelegramNotifier]:
+        notifiers = [
+            TelegramNotifier(token=self.telegram_token, chat_id=self.telegram_chat_id, hb=hb)
+        ]
+        return notifiers
+
+
+class TelegramDisabledMode(TelegramMode):
+    class Config:
+        title = "telegram_disabled"
+
+    def get_notifiers(self, hb: "HummingbotApplication") -> List[TelegramNotifier]:
+        return []
+
+
+TELEGRAM_MODES = {
+    TelegramEnabledMode.Config.title: TelegramEnabledMode,
+    TelegramDisabledMode.Config.title: TelegramDisabledMode,
+}
 
 
 class DBMode(BaseClientModel, ABC):
@@ -877,12 +877,12 @@ class ClientConfigMap(BaseClientModel):
             ),
         )
     )
-    # telegram_mode: Union[tuple(TELEGRAM_MODES.values())] = Field(
-    #     default=TelegramDisabledMode(),
-    #     client_data=ClientFieldData(
-    #         prompt=lambda cm: f"Select the desired telegram mode ({'/'.join(list(TELEGRAM_MODES.keys()))})"
-    #     )
-    # )
+    telegram_mode: Union[tuple(TELEGRAM_MODES.values())] = Field(
+        default=TelegramDisabledMode(),
+        client_data=ClientFieldData(
+            prompt=lambda cm: f"Select the desired telegram mode ({'/'.join(list(TELEGRAM_MODES.keys()))})"
+        )
+    )
     mqtt_bridge: MQTTBridgeConfigMap = Field(
         default=MQTTBridgeConfigMap(),
         description=('MQTT Bridge configuration.'),
@@ -1050,17 +1050,17 @@ class ClientConfigMap(BaseClientModel):
             raise ValueError(f"The value must be one of {', '.join(list(AutofillImportEnum))}.")
         return v
 
-    # @validator("telegram_mode", pre=True)
-    # def validate_telegram_mode(cls, v: Union[(str, Dict) + tuple(TELEGRAM_MODES.values())]):
-    #     if isinstance(v, tuple(TELEGRAM_MODES.values()) + (Dict,)):
-    #         sub_model = v
-    #     elif v not in TELEGRAM_MODES:
-    #         raise ValueError(
-    #             f"Invalid telegram mode, please choose a value from {list(TELEGRAM_MODES.keys())}."
-    #         )
-    #     else:
-    #         sub_model = TELEGRAM_MODES[v].construct()
-    #     return sub_model
+    @validator("telegram_mode", pre=True)
+    def validate_telegram_mode(cls, v: Union[(str, Dict) + tuple(TELEGRAM_MODES.values())]):
+        if isinstance(v, tuple(TELEGRAM_MODES.values()) + (Dict,)):
+            sub_model = v
+        elif v not in TELEGRAM_MODES:
+            raise ValueError(
+                f"Invalid telegram mode, please choose a value from {list(TELEGRAM_MODES.keys())}."
+            )
+        else:
+            sub_model = TELEGRAM_MODES[v].construct()
+        return sub_model
 
     @validator("send_error_logs", pre=True)
     def validate_bool(cls, v: str):
