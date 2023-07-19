@@ -1355,7 +1355,9 @@ cdef class AvellanedaMarketMakingStrategy(StrategyBase):
         mid_price_variance = vol ** 2
 
         if not os.path.exists(self._debug_csv_path):
-            df_header = pd.DataFrame([('mid_price',
+            self.logger().info(f"dumping csv data to {self._debug_csv_path}")
+            df_header = pd.DataFrame([('time',
+                                       'mid_price',
                                        'best_bid',
                                        'best_ask',
                                        'reservation_price',
@@ -1368,7 +1370,6 @@ cdef class AvellanedaMarketMakingStrategy(StrategyBase):
                                        'target_inv',
                                        'time_left_fraction',
                                        'mid_price std_dev',
-                                       'risk_factor',
                                        'gamma',
                                        'alpha',
                                        'kappa',
@@ -1383,7 +1384,8 @@ cdef class AvellanedaMarketMakingStrategy(StrategyBase):
         else:
             time_left_fraction = None
 
-        df = pd.DataFrame([(mid_price,
+        df = pd.DataFrame([(time.time(),
+                            mid_price,
                             best_bid,
                             best_ask,
                             self._reservation_price,
