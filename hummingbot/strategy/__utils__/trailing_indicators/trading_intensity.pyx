@@ -2,6 +2,9 @@
 # distutils: sources=hummingbot/core/cpp/OrderBookEntry.cpp
 
 import warnings
+import pandas as pd
+import copy
+import os
 from decimal import Decimal
 from typing import Tuple
 
@@ -12,6 +15,8 @@ from scipy.optimize import OptimizeWarning
 from hummingbot.core.data_type.common import (
     PriceType,
 )
+from hummingbot import data_path
+from hummingbot.core.event.events import TradeType
 from hummingbot.core.data_type.order_book import OrderBook
 from hummingbot.core.event.event_listener cimport EventListener
 from hummingbot.core.event.events import OrderBookEvent
@@ -41,6 +46,11 @@ cdef class TradingIntensityIndicator:
         self._last_quotes = []
 
         warnings.simplefilter("ignore", OptimizeWarning)
+        self._debug_csv_path = os.path.join(data_path(), f"trade_data_{pd.Timestamp.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv")
+        if not os.path.exists(self._debug_csv_path):
+            df_header = pd.DataFrame([("timestamp", "price", "amount", "type", "quote_price", "price_level")])
+            df_header.to_csv(self._debug_csv_path, mode='a', header=False, index=False)
+
 
     @property
     def current_value(self) -> Tuple[float, float]:
@@ -89,6 +99,10 @@ cdef class TradingIntensityIndicator:
                 if quote["timestamp"] < trade.timestamp:
                     if latest_processed_quote_idx is None or i < latest_processed_quote_idx:
                         latest_processed_quote_idx = i
+                    trade_type = "buy" if trade.type == TradeType.BUY else "sell"
+                    df = pd.DataFrame([(trade.timestamp, trade.price, trade.amount, trade_type, float(quote["price"]), abs(trade.price - float(quote["price"])))])
+                    df.to_csv(self._debug_csv_path, mode='a', header=False, index=False)
+
                     trade = {"price_level": abs(trade.price - float(quote["price"])), "amount": trade.amount}
 
                     if quote["timestamp"] + 1 not in self._trade_samples.keys():
