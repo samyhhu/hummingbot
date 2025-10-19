@@ -1,12 +1,11 @@
 from decimal import Decimal
-from typing import (
-    NamedTuple, Iterator
-)
+from typing import Iterator, NamedTuple
+
+from hummingbot.connector.exchange_base import ExchangeBase
+from hummingbot.core.data_type.common import PriceType
 from hummingbot.core.data_type.order_book import OrderBook
 from hummingbot.core.data_type.order_book_query_result import ClientOrderBookQueryResult
 from hummingbot.core.data_type.order_book_row import ClientOrderBookRow
-from hummingbot.connector.exchange_base import ExchangeBase
-from hummingbot.core.data_type.common import PriceType
 
 
 class MarketTradingPairTuple(NamedTuple):
@@ -17,6 +16,10 @@ class MarketTradingPairTuple(NamedTuple):
 
     def __repr__(self) -> str:
         return f"MarketTradingPairTuple({self.market.name}, {self.trading_pair}, {self.base_asset}, {self.quote_asset})"
+
+    @property
+    def name(self) -> str:
+        return f"{self.market.name}_{self.trading_pair}"
 
     @property
     def order_book(self) -> OrderBook:

@@ -1,4 +1,4 @@
-name: hummingbot
+name: hummingbot-mft
 channels:
   - conda-forge
   - defaults
@@ -58,3 +58,5 @@ dependencies:
   - xrpl-py==4.1.0
   - yaml>=0.2.5
   - zlib>=1.2.13
+  - fastapi
+  - uvicorn

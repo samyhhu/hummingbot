@@ -1,4 +1,4 @@
-name: hummingbot
+name: hummingbot-mft
 channels:
   - conda-forge
   - defaults

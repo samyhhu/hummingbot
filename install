@@ -45,17 +45,17 @@ if [ "$USE_DYDX" = true ]; then
     echo "install dydx version."
 fi
 
-if ${CONDA_EXE} env list | egrep -qe "^hummingbot"; then
+if ${CONDA_EXE} env list | egrep -qe "^hummingbot-mft"; then
     ${CONDA_EXE} env update -f $ENV_FILE
 else
     ${CONDA_EXE} env create -f $ENV_FILE
 fi
 
-source "${CONDA_BIN}/activate" hummingbot
+source "${CONDA_BIN}/activate" hummingbot-mft
 
 # Additional dependencies for Mac OS
 if [ "$(uname)" == "Darwin" ]; then
-    conda install -n hummingbot -y appnope
+    conda install -n hummingbot-mft -y appnope
 fi
 
 # Add the project directory to module search paths.
